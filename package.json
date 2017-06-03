@@ -4,9 +4,11 @@
   "description": "a video player for mooc's video",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-packager ./ --overwrite --platform=darwin --arch=x64 --asar --ignore=./.idea --icon=./icon.icns"
   },
   "devDependencies": {
     "electron": "~1.6.2"
-  }
+  },
+  "productName": "Ant Player"
 }
