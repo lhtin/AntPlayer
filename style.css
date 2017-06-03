@@ -1,0 +1,113 @@
+* {
+    box-sizing: border-box;
+}
+html, body {
+    margin: 0;
+    border: 0 solid transparent;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Optima, "STHeiti", sans-serif;
+    font-size: 16px;
+}
+.page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: white;
+    transition: transform .6s ease;
+}
+
+.btn {
+    display: inline-block;
+    border: 1px solid darkblue;
+    border-radius: 2px;
+    padding: 0 10px;
+    min-width: 70px;
+    height: 36px;
+    line-height: 36px;
+    cursor: pointer;
+    color: darkblue;
+    background-color: white;
+    transition: all .3s ease;
+    font-size: 16px;
+    user-select: none;
+    text-align: center;
+}
+.btn:hover {
+    background-color: darkblue;
+    color: white;
+}
+
+#page1 {
+    left: 0;
+}
+
+#page2 {
+    left: 100%;
+}
+
+#playground {
+    padding-top: 30px;
+}
+
+video {
+    margin: -110px auto 0;
+    height: 680px;
+    width: 888px;
+    display: block;
+}
+
+video::-webkit-media-controls-panel {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+video::-webkit-media-text-track-display {
+    line-height: 24px;
+    font-size: 18px;
+    color: black;
+    font-family: Optima, "STHeiti", sans-serif;
+}
+
+video::cue {
+    background: transparent;
+}
+
+#back {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+}
+
+#list>div {
+    font-size: 16px;
+    margin: 10px 0;
+    padding: 0 10px;
+    height: 28px;
+    line-height: 28px;
+    cursor: pointer;
+    transition: all .3s ease;
+}
+#list>div.file {
+    border: 1px solid darkgreen;
+    color: darkgreen;
+    background-color: white;
+}
+#list>div.file:hover {
+    color: white;
+    background-color: darkgreen;
+}
+#list>div.dir {
+    border: 1px solid darkred;
+    color: darkred;
+    background-color: white;
+}
+#list>div.dir:hover {
+    color: white;
+    background-color: darkred;
+}
