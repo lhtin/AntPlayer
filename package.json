@@ -1,6 +1,6 @@
 {
   "name": "mooc-player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a video player for mooc's video",
   "main": "main.js",
   "scripts": {
