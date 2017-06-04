@@ -2,21 +2,98 @@ const fs = require('fs');
 const path = require('path');
 const {dialog} = require('electron').remote;
 
-let storage = (() => {
-    let videos = localStorage.getItem('videos');
-    videos = (videos ? JSON.parse(videos) : Object.create(null));
-    return (id, time) => {
-        if (typeof time === 'number') {
-            videos[id] = time;
-            localStorage.setItem('videos', JSON.stringify(videos));
-        } else {
-            return videos[id];
+let store = (key, obj) => {
+    localStorage.setItem(key, JSON.stringify(obj));
+};
+let find = (key) => {
+    let str = localStorage.getItem(key);
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return str;
+    }
+};
+let remove = (key) => {
+    localStorage.removeItem(key);
+};
+let record = (() => {
+    let item = {
+        type: '',
+        filename: '',
+        path: '',
+        dir: '',
+        currentTime: 0
+    };
+
+    let key = 'history';
+    let r = find(key) || [];
+    return {
+        destroy: () => {
+            r = [];
+            store(key, r);
+        },
+        find: (path) => {
+            let res = r.filter((item) => {
+                return item.path === path
+            });
+            return res.length > 0 ? res[0] : false;
+        },
+        push: (item) => {
+            let i = r.findIndex((_item) => {
+                return _item.path === item.path;
+            });
+            if (i > -1) {
+                r.splice(i, 1);
+            }
+            r.push(item);
+            if (r.length > 10) {
+                r = r.slice(-10);
+            }
+            store(key, r);
+        },
+        get: () => {
+            return Array.from(r).reverse();
         }
     }
 })();
-let re = /\.(?:mp4|webm)$/;
+let videoRegExp = /\.(?:mp4|webm)$/;
+let isVideoFile = (filename) => {
+    return videoRegExp.test(filename);
+};
 module.exports = {
-    re: re,
+    store: store,
+    find: find,
+    remove: remove,
+
+    record: record,
+    makeList: (list) => {
+        let frag = document.createDocumentFragment();
+        for (let item of list) {
+            let div = document.createElement('div');
+            div.ant = item;
+            div.className = item.type;
+            if (typeof item.currentTime === 'number') {
+                div.innerHTML = `${item.filename} : ${item.currentTime.toFixed(1)}s`;
+            } else {
+                div.innerHTML = `${item.filename}`;
+            }
+            frag.appendChild(div);
+        }
+        return frag;
+    },
+    step: (f) => {
+        let flag = false;
+        return (e) => {
+            if (flag) {
+                return;
+            }
+            flag = true;
+            f(e, () => {
+                flag = false;
+            });
+        }
+    },
+    isVideoFile: isVideoFile,
     selectDir: (cb) => {
         let paths = dialog.showOpenDialog({
             title: '选择目录',
@@ -59,14 +136,14 @@ module.exports = {
         // 上一层目录
         list.push({
             dir: dir,
-            name: '..',
+            filename: '..',
             path: path.join(dir, '..'),
             type: 'dir'
         });
         for (let file of files) {
             let item = {
                 dir: dir,
-                name: file,
+                filename: file,
                 path: path.join(dir, file),
                 type: 'unknown'
             };
@@ -75,7 +152,9 @@ module.exports = {
                     check(err);
                 } else if (stats.isFile()) {
                     item.type = 'file';
-                    if (file.indexOf('.') !== 0 && re.test(file)) {
+                    if (file.indexOf('.') !== 0 && videoRegExp.test(file)) {
+                        let ritem = record.find(item.path);
+                        item.currentTime = ritem ? ritem.currentTime : 0;
                         fileList.push(item);
                     }
                 } else if (stats.isDirectory()) {
@@ -88,7 +167,7 @@ module.exports = {
             });
         }
     },
-    makeVideo: (videoPath) => {
+    makeVideo: (item) => {
         let loadedmetadata = false;
         let video = document.createElement('video');
         video.addEventListener('canplay', function () {
@@ -103,12 +182,13 @@ module.exports = {
         });
         video.addEventListener('loadedmetadata', function () {
             loadedmetadata = true;
-            video.currentTime = storage(videoPath) || 0;
+            video.currentTime = item.currentTime;
         });
         video.addEventListener('timeupdate', function () {
-            storage(videoPath, video.currentTime);
+            item.currentTime = video.currentTime;
+            record.push(item);
         });
-        video.setAttribute('src', videoPath);
+        video.setAttribute('src', item.path);
         video.setAttribute('controls', 'true');
         video.setAttribute('autoplay', 'true');
 
@@ -120,7 +200,7 @@ module.exports = {
             video.appendChild(subtitle);
         };
 
-        let subtitlePath = videoPath.replace(re, '.vtt');
+        let subtitlePath = item.path.replace(videoRegExp, '.vtt');
         fs.stat(subtitlePath, (err, stats) => {
             if (err) {
 
@@ -128,15 +208,13 @@ module.exports = {
                 setSubtitle(subtitlePath);
             }
         });
-
-
         return {
             appendTo: function (box) {
                 box.appendChild(video);
             },
             destroy: function () {
                 video.pause();
-                video.parentNode.removeChild(video);
+                video.parentNode && video.parentNode.removeChild(video);
             },
             toggle: function () {
                 if (video.paused) {

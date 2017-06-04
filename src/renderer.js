@@ -1,11 +1,29 @@
-const {selectDir, getFiles, makeFileList, makeVideo} = require('./lib');
+const {
+    selectDir, getFiles, makeFileList, makeVideo,
+    isVideoFile, step, record, makeList,
+    store, remove, find
+} = require('./lib');
 
-let btn = document.getElementById('btn');
+let openBtn = document.getElementById('open-btn');
+let backBtn = document.getElementById('back-btn');
+let clearBtn = document.getElementById('clear-btn');
 let listEle = document.getElementById('list');
+let preview = document.getElementById('preview');
+let historyRecord = document.getElementById('history-record');
 let playground = document.getElementById('playground');
+let title = document.getElementById('title');
 let page1 = document.getElementById('page1');
 let page2 = document.getElementById('page2');
-let back = document.getElementById('back');
+
+// let $ = ((ss) => {
+//     let _$ = {};
+//     for (let i = 0, len = ss.length; i < len; i += 1) {
+//         _$[ss[i]] = document.querySelector(ss[i]);
+//     }
+//     return (s) => {
+//         return _$[s];
+//     }
+// })(['#btn', '#list', '#playground', '#title', '#page1', '#page2', '#back', '#history-record']);
 
 let video;
 
@@ -22,21 +40,26 @@ document.addEventListener('keydown', function (e) {
         video.next();
     }
 });
-back.addEventListener('click', () => {
-    video = null;
+backBtn.addEventListener('click', step((e, finish) => {
     playground.innerHTML = '';
     page2.style.transform = 'translate(0, 0)';
-});
-let goPlayground = () => {
-    page2.style.transform = 'translate(-100%, 0)';
-};
-
+    video && video.destroy();
+    video = null;
+    refresh(finish);
+}));
 let playVideo = (item) => {
     playground.innerHTML = '';
-    video = makeVideo(item.path);
+    title.innerHTML = item.filename;
+    record.push(item);
+    video = makeVideo(item);
     video.appendTo(playground);
-    goPlayground();
+    page2.style.transform = 'translate(-100%, 0)';
 };
+clearBtn.addEventListener('click', step((e, finish) => {
+    historyRecord.innerHTML = '';
+    record.destroy();
+    refresh(finish);
+}));
 
 let showFileList = (dir, cb) => {
     getFiles(dir, (err, files) => {
@@ -47,53 +70,35 @@ let showFileList = (dir, cb) => {
             if (err) {
                 throw err;
             }
-            let frag = document.createDocumentFragment();
-            let div = document.createElement('div');
-            div.className = 'dir';
-            div.innerHTML = '..';
-            for (let item of list) {
-                let div = document.createElement('div');
-                div.className = item.type;
-                div.innerHTML = `${item.name}`;
-                div.data = item;
-                frag.appendChild(div);
-            }
-            listEle.innerHTML = '';
-            listEle.appendChild(frag);
-            localStorage.setItem('dir', dir);
+            preview.innerHTML = '';
+            preview.appendChild(makeList(list));
+            store('div', dir);
             cb && cb();
         })
     });
 };
 
-let xxx = (f) => {
-    let flag = false;
-    return (e) => {
-        if (flag) {
-            return;
-        }
-        flag = true;
-        f(e, () => {
-            flag = false;
-        });
-    }
-};
-
-listEle.addEventListener('click', xxx((e, finish) => {
-    let item = e.target.data;
+listEle.addEventListener('click', step((e, finish) => {
+    let item = e.target.ant;
     if (!item) {
         return finish();
     }
     if (item.type === 'file') {
-        if (/\.(?:mp4|webm)$/.test(item.name)) {
+        if (isVideoFile(item.filename)) {
             playVideo(item);
+            setTimeout(finish, 1000);
+        } else {
+            finish();
         }
-        finish();
     } else if (item.type === 'dir') {
-        showFileList(item.path, finish);
+        store('dir', item.path);
+        refresh(finish);
+    } else {
+        finish();
     }
 }));
-btn.addEventListener('click', xxx((e, finish) => {
+
+openBtn.addEventListener('click', step((e, finish) => {
     selectDir((err, dir) => {
         if (err) {
             finish();
@@ -103,5 +108,14 @@ btn.addEventListener('click', xxx((e, finish) => {
     });
 }));
 
-let dir = localStorage.getItem('dir');
-showFileList(dir || './');
+let refresh = (cb) => {
+    let dir = find('dir') || './';
+    showFileList(dir, () => {
+        historyRecord.innerHTML = '';
+        historyRecord.appendChild(makeList(record.get()));
+        cb && cb();
+    });
+};
+
+refresh();
+

@@ -28,8 +28,8 @@ html, body {
     border-radius: 2px;
     padding: 0 10px;
     min-width: 70px;
-    height: 36px;
-    line-height: 36px;
+    height: 28px;
+    line-height: 28px;
     cursor: pointer;
     color: darkblue;
     background-color: white;
@@ -78,13 +78,14 @@ video::cue {
     background: transparent;
 }
 
-#back {
+#back-btn {
     position: absolute;
     top: 60px;
     left: 20px;
 }
 
-#list>div {
+.list .file,
+.list .dir {
     font-size: 16px;
     margin: 10px 0;
     padding: 0 10px;
@@ -93,21 +94,35 @@ video::cue {
     cursor: pointer;
     transition: all .3s ease;
 }
-#list>div.file {
+.list .file {
     border: 1px solid darkgreen;
     color: darkgreen;
     background-color: white;
 }
-#list>div.file:hover {
+.list .file:hover {
     color: white;
     background-color: darkgreen;
 }
-#list>div.dir {
+.list .dir {
     border: 1px solid darkred;
     color: darkred;
     background-color: white;
 }
-#list>div.dir:hover {
+.list .dir:hover {
     color: white;
     background-color: darkred;
+}
+
+.title {
+    font-size: 18px;
+    margin: 20px 0 10px;
+    border-bottom: 1px solid darkgray;
+    height: 28px;
+    line-height: 28px;
+    transition: all .3s ease;
+    color: darkgray;
+}
+
+#title {
+    color: darkgray;
 }
