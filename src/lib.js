@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const {dialog} = require('electron').remote;
+const {parse} = require('node-webvtt');
 
 let store = (key, obj) => {
     localStorage.setItem(key, JSON.stringify(obj));
@@ -46,19 +47,66 @@ let record = (() => {
                 r.splice(i, 1);
             }
             r.push(item);
-            if (r.length > 10) {
-                r = r.slice(-10);
+            if (r.length > 1000) {
+                r = r.slice(-1000);
             }
             store(key, r);
         },
         get: () => {
-            return Array.from(r).reverse();
+            return Array.from(r).reverse().slice(0, 10);
         }
     }
 })();
 let videoRegExp = /\.(?:mp4|webm)$/;
 let isVideoFile = (filename) => {
     return videoRegExp.test(filename);
+};
+let makeSubtitle = (path, video, sub) => {
+    fs.readFile(path, 'utf8', (err, data) => {
+        if (err) {
+            return;
+        }
+        let res = parse(data);
+        if (res.valid) {
+            let findCue = (() => {
+                let cues = res.cues;
+                let len = cues.length;
+                let at = 0;
+                return (t) => {
+                    let cue = cues[at];
+                    if (cue.start > t) {
+                        if (at <= 0) {
+                            return '';
+                        } else if (cues[at - 1].end < t) {
+                            return '';
+                        } else {
+                            at -= 1;
+                            return findCue(t);
+                        }
+                    } else if (cue.end < t) {
+                        if (at >= len - 1) {
+                            return '';
+                        } else if (cues[at + 1].start > t) {
+                            return '';
+                        } else {
+                            at += 1;
+                            return findCue(t);
+                        }
+                    } else {
+                        return cue.text;
+                    }
+                }
+            })();
+            let lastCue;
+            video.addEventListener('timeupdate', function () {
+                let cue = findCue(video.currentTime);
+                if (lastCue !== cue) {
+                    lastCue = cue;
+                    sub.innerHTML = cue.replace(/(\b\w+\b)/g, '<span class="word">$1</span>');
+                }
+            });
+        }
+    });
 };
 module.exports = {
     store: store,
@@ -73,7 +121,7 @@ module.exports = {
             div.ant = item;
             div.className = item.type;
             if (typeof item.currentTime === 'number') {
-                div.innerHTML = `${item.filename} : ${item.currentTime.toFixed(1)}s`;
+                div.innerHTML = `${item.filename} : ${item.currentTime}s`;
             } else {
                 div.innerHTML = `${item.filename}`;
             }
@@ -169,16 +217,22 @@ module.exports = {
     },
     makeVideo: (item) => {
         let loadedmetadata = false;
+        let frag = document.createDocumentFragment();
         let video = document.createElement('video');
+        let sub = document.createElement('div');
+        sub.className = 'subtitle';
+        frag.appendChild(video);
+        frag.appendChild(sub);
         video.addEventListener('canplay', function () {
             let height = video.videoHeight;
             if (height > 500) {
                 height = 500;
             }
-            video.height = height + 220;
+            video.height = height;
             video.width = height / video.videoHeight * video.videoWidth;
             video.style.height = video.height + 'px';
             video.style.width = video.width + 'px';
+            sub.style.width = video.width + 'px';
         });
         video.addEventListener('loadedmetadata', function () {
             loadedmetadata = true;
@@ -192,29 +246,22 @@ module.exports = {
         video.setAttribute('controls', 'true');
         video.setAttribute('autoplay', 'true');
 
-        let setSubtitle = (path) => {
-            let subtitle = document.createElement('track');
-            subtitle.setAttribute('default', 'true');
-            subtitle.setAttribute('kind', 'subtitles');
-            subtitle.setAttribute('src', path);
-            video.appendChild(subtitle);
-        };
-
         let subtitlePath = item.path.replace(videoRegExp, '.vtt');
         fs.stat(subtitlePath, (err, stats) => {
             if (err) {
 
             } else if (stats.isFile()) {
-                setSubtitle(subtitlePath);
+                makeSubtitle(subtitlePath, video, sub);
             }
         });
+
         return {
             appendTo: function (box) {
-                box.appendChild(video);
+                box.appendChild(frag);
             },
             destroy: function () {
                 video.pause();
-                video.parentNode && video.parentNode.removeChild(video);
+                frag.parentNode && frag.parentNode.removeChild(frag);
             },
             toggle: function () {
                 if (video.paused) {
@@ -232,8 +279,7 @@ module.exports = {
                 if (loadedmetadata) {
                     video.currentTime += 5;
                 }
-            },
-            setSubtitle: setSubtitle
+            }
         }
     }
 };
