@@ -82,7 +82,7 @@ let xxx = (f) => {
 listEle.addEventListener('click', xxx((e, finish) => {
     let item = e.target.data;
     if (!item) {
-        return;
+        return finish();
     }
     if (item.type === 'file') {
         if (/\.(?:mp4|webm)$/.test(item.name)) {

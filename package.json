@@ -1,15 +1,31 @@
 {
-  "name": "mooc-player",
+  "name": "ant-player",
   "version": "1.0.1",
-  "description": "a video player for mooc's video",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "build": "electron-packager ./ --overwrite --platform=darwin --arch=x64 --asar --ignore=./.idea --icon=./icon.icns"
+  "description": "Ant Player - a minimal player",
+  "productName": "Ant Player",
+  "main": "src/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lhtin/AntPlayer.git"
   },
+  "author": {
+    "name": "lhtin",
+    "email": "lehuading@qq.com",
+    "url": "https://lhtin.github.io"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lhtin/AntPlayer/issues"
+  },
+  "homepage": "https://github.com/lhtin/AntPlayer",
   "devDependencies": {
     "electron": "~1.6.2",
     "electron-packager": "^8.7.0"
   },
-  "productName": "Ant Player"
+  "scripts": {
+    "start": "electron .",
+    "build-mac": "electron-packager ./ \"Ant Player\" --overwrite --platform=darwin --arch=x64 --asar --ignore=./.idea --icon=./icon.icns --out=dist",
+    "build-win": "electron-packager ./ \"Ant Player\" --overwrite --platform=win32 --arch=x64 --asar --ignore=./.idea --icon=./icon.icns --download.cache=./temp --out=dist",
+    "build-linux": "electron-packager ./ \"Ant Player\" --overwrite --platform=linux --arch=x64 --asar --ignore=./.idea --icon=./icon.icns --download.cache=./temp --out=dist"
+  }
 }
