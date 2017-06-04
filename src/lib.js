@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const {dialog} = require('electron').remote;
-const {parse} = require('node-webvtt');
+const electron = require('electron');
+
+const dialog = electron.remote.dialog;
+const parse = require('./parser').parse;
 
 let store = (key, obj) => {
     localStorage.setItem(key, JSON.stringify(obj));
@@ -112,7 +114,6 @@ module.exports = {
     store: store,
     find: find,
     remove: remove,
-
     record: record,
     makeList: (list) => {
         let frag = document.createDocumentFragment();

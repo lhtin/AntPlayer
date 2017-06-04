@@ -1,7 +1,8 @@
 const {
     selectDir, getFiles, makeFileList, makeVideo,
     isVideoFile, step, record, makeList,
-    store, remove, find
+    store, find,
+    log
 } = require('./lib');
 
 let openBtn = document.getElementById('open-btn');
@@ -101,8 +102,7 @@ listEle.addEventListener('click', step((e, finish) => {
 openBtn.addEventListener('click', step((e, finish) => {
     selectDir((err, dir) => {
         if (err) {
-            finish();
-            throw err;
+            return finish();
         }
         showFileList(dir, finish);
     });
