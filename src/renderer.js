@@ -6,6 +6,7 @@ const {
 } = require('./lib');
 
 let openBtn = document.getElementById('open-btn');
+let foldBtn = document.getElementById('fold-btn');
 let backBtn = document.getElementById('back-btn');
 let clearBtn = document.getElementById('clear-btn');
 let listEle = document.getElementById('list');
@@ -41,6 +42,22 @@ document.addEventListener('keydown', function (e) {
         video.next();
     }
 });
+foldBtn.addEventListener('click', step((() => {
+    let flag = false;
+    return (e, finish) => {
+        if (flag) {
+            refresh(() => {
+                foldBtn.innerHTML = 'Fold';
+                finish();
+            });
+        } else {
+            preview.innerHTML = '';
+            foldBtn.innerHTML = 'Unfold';
+            finish();
+        }
+        flag = !flag;
+    }
+})()));
 backBtn.addEventListener('click', step((e, finish) => {
     playground.innerHTML = '';
     page2.style.transform = 'translate(0, 0)';

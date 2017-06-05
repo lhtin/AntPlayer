@@ -177,7 +177,9 @@ module.exports = {
                 }
                 count += 1;
                 if (count >= length) {
-                    cb(false, list.concat(fileList, dirList))
+                    cb(false, list.concat(
+                        fileList.sort((a, b) => a.filename.localeCompare(b.filename)),
+                        dirList.sort((a, b) => a.filename.localeCompare(b.filename))))
                 }
             }
         })();
