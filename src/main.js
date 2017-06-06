@@ -1,9 +1,7 @@
-const electron = require('electron');
-const app = electron.app;
-const BrowserWindow = electron.BrowserWindow;
-
 const path = require('path');
 const url = require('url');
+
+const {app, BrowserWindow, Menu} = require('electron');
 
 let mainWindow;
 
@@ -21,7 +19,27 @@ function createWindow() {
         mainWindow = null
     })
 }
-app.on('ready', createWindow);
+let template = [{
+    label: 'Edit',
+    submenu: [
+        {role: 'copy', label: 'Copy'}
+    ]
+}];
+if (process.platform === 'darwin') {
+    template.unshift({
+        label: app.getName(),
+        submenu: [
+            {role: 'about', label: 'About'},
+            {role: 'quit', label: 'Quit'}
+        ]
+    });
+}
+
+app.on('ready', () => {
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+    createWindow();
+});
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
         app.quit()

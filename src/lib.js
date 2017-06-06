@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const electron = require('electron');
-
-const dialog = electron.remote.dialog;
+const { Menu, MenuItem, dialog} = require('electron').remote;
 const parse = require('./parser').parse;
 
 let store = (key, obj) => {
