@@ -9,6 +9,7 @@ html, body {
     height: 100%;
     font-family: Optima, "STHeiti", sans-serif;
     font-size: 16px;
+    overflow: hidden;
 }
 .page {
     position: absolute;

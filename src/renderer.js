@@ -28,18 +28,31 @@ let page2 = document.getElementById('page2');
 // })(['#btn', '#list', '#playground', '#title', '#page1', '#page2', '#back', '#history-record']);
 
 let video;
-
+let back = step((e, finish) => {
+    playground.innerHTML = '';
+    page2.style.transform = 'translate(0, 0)';
+    video && video.destroy();
+    video = null;
+    refresh(finish);
+});
 document.addEventListener('keydown', function (e) {
     if (!video) {
         return;
     }
-    if (e.key === ' ') {
-        video.toggle();
-        e.preventDefault();
-    } else if (e.key === 'ArrowLeft') {
-        video.prev();
-    } else if (e.key === 'ArrowRight') {
-        video.next();
+    switch(e.key) {
+        case ' ':
+            video.toggle();
+            e.preventDefault();
+            break;
+        case 'ArrowLeft':
+            video.prev();
+            break;
+        case 'ArrowRight':
+            video.next();
+            break;
+        case 'Escape':
+            back();
+            break;
     }
 });
 foldBtn.addEventListener('click', step((() => {
@@ -58,13 +71,8 @@ foldBtn.addEventListener('click', step((() => {
         flag = !flag;
     }
 })()));
-backBtn.addEventListener('click', step((e, finish) => {
-    playground.innerHTML = '';
-    page2.style.transform = 'translate(0, 0)';
-    video && video.destroy();
-    video = null;
-    refresh(finish);
-}));
+
+backBtn.addEventListener('click', back);
 let playVideo = (item) => {
     playground.innerHTML = '';
     title.innerHTML = item.filename;
