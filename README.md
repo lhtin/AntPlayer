@@ -32,7 +32,7 @@
 
 `npm run build-mac`
 
-运行完之后将在`Ant Player-darwin-x64`目录下得到`Ant Player.app`程序文件，拷贝到Mac的应用程序目录下即可。
+运行完之后将在`dist/Ant Player-darwin-x64`目录下得到`Ant Player.app`程序文件，拷贝到Mac的应用程序目录下即可。
 
 ### 生成Linux程序
 
