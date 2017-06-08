@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { Menu, MenuItem, dialog} = require('electron').remote;
+const {Menu, MenuItem, dialog} = require('electron').remote;
 const parse = require('./parser').parse;
 
 let store = (key, obj) => {
@@ -108,6 +108,9 @@ let makeSubtitle = (path, video, sub) => {
         }
     });
 };
+let log = (err) => {
+    document.body.innerHTML = err.toString();
+};
 module.exports = {
     store: store,
     find: find,
@@ -140,9 +143,8 @@ module.exports = {
             });
         }
     },
-    isVideoFile: isVideoFile,
     selectDir: (cb) => {
-        let paths = dialog.showOpenDialog({
+        dialog.showOpenDialog({
             title: '选择目录',
             defaultPath: '~',
             properties: ['openDirectory']
@@ -150,71 +152,73 @@ module.exports = {
             if (paths) {
                 cb(false, paths[0]);
             } else {
-                cb(true);
+                cb(new Error('没有选择目录'));
             }
         });
     },
     getFiles: (dir, cb) => {
-        fs.readdir(dir, cb)
-    },
-    makeFileList: (dir, files, cb) => {
-        let list = [];
-        let dirList = [];
-        let fileList = [];
-
-        let check = (() => {
-            let length = files.length;
-            let count = 0;
-            return (err) => {
-                if (count === -1) {
-                    return;
-                }
-                if (err) {
-                    cb(err);
-                    count = -1;
-                }
-                count += 1;
-                if (count >= length) {
-                    cb(false, list.concat(
-                        fileList.sort((a, b) => a.filename.localeCompare(b.filename)),
-                        dirList.sort((a, b) => a.filename.localeCompare(b.filename))))
-                }
+        fs.readdir(dir, (err, files) => {
+            if (err) {
+                return log(err);
             }
-        })();
+            let list = [];
+            let dirList = []; // dirs
+            let fileList = []; // video files
 
-        // 上一层目录
-        list.push({
-            dir: dir,
-            filename: '..',
-            path: path.join(dir, '..'),
-            type: 'dir'
-        });
-        for (let file of files) {
-            let item = {
-                dir: dir,
-                filename: file,
-                path: path.join(dir, file),
-                type: 'unknown'
-            };
-            let stats = fs.stat(item.path, (err, stats) => {
-                if (err) {
-                    check(err);
-                } else if (stats.isFile()) {
-                    item.type = 'file';
-                    if (file.indexOf('.') !== 0 && videoRegExp.test(file)) {
-                        let ritem = record.find(item.path);
-                        item.currentTime = ritem ? ritem.currentTime : 0;
-                        fileList.push(item);
+            let check = (() => {
+                let length = files.length;
+                let count = 0;
+                return (err) => {
+                    if (count === -1) {
+                        return;
                     }
-                } else if (stats.isDirectory()) {
-                    item.type = 'dir';
-                    if (file.indexOf('.') !== 0) {
+                    if (err) {
+                        log(err);
+                        count = -1;
+                    }
+                    count += 1;
+                    if (count >= length) {
+                        cb(list.concat(
+                            fileList.sort((a, b) => a.filename.localeCompare(b.filename)),
+                            dirList.sort((a, b) => a.filename.localeCompare(b.filename))))
+                    }
+                }
+            })();
+
+            // 上一层目录
+            list.push({
+                dir: dir,
+                filename: '..',
+                path: path.join(dir, '..'),
+                type: 'dir'
+            });
+            for (let file of files) {
+                let item = {
+                    dir: dir,
+                    filename: file,
+                    path: path.join(dir, file),
+                    type: 'unknown'
+                };
+                fs.stat(item.path, (err, stats) => {
+                    if (err) {
+                        return check(err);
+                    } else if (file.indexOf('.') === 0) {
+                        // 去掉文件开头为.的文件和目录
+                    } else if (stats.isFile()) {
+                        item.type = 'file';
+                        if (isVideoFile(file)) {
+                            let record_time = record.find(item.path);
+                            item.currentTime = record_time ? record_time.currentTime : 0;
+                            fileList.push(item);
+                        }
+                    } else if (stats.isDirectory()) {
+                        item.type = 'dir';
                         dirList.push(item);
                     }
-                }
-                check();
-            });
-        }
+                    check();
+                });
+            }
+        })
     },
     makeVideo: (item) => {
         let loadedmetadata = false;
