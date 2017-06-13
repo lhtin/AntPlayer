@@ -1,5 +1,5 @@
 const {
-    selectDir, getFiles, makeVideo,
+    selectDir, selectSub, getFiles, makeVideo,
     step, record, makeList,
     store, find
 } = require('./lib');
@@ -12,13 +12,21 @@ let listEle = document.getElementById('list');
 let preview = document.getElementById('preview');
 let historyRecord = document.getElementById('history-record');
 let playground = document.getElementById('playground');
+let box = document.getElementById('box');
+let subtitle = document.getElementById('subtitle');
 let title = document.getElementById('title');
 let page1 = document.getElementById('page1');
 let page2 = document.getElementById('page2');
+let replaceBtn = document.getElementById('replace-btn');
+let subInp = document.getElementById('sub-inp');
 
 let video;
+let clearPlayground = () => {
+    box.innerHTML = '';
+    subtitle.innerHTML = '';
+};
 let back = step((e, finish) => {
-    playground.innerHTML = '';
+    clearPlayground();
     page2.style.transform = 'translate(0, 0)';
     video && video.destroy();
     video = null;
@@ -28,11 +36,11 @@ let back = step((e, finish) => {
     });
 });
 let playVideo = (item) => {
-    playground.innerHTML = '';
+    clearPlayground();
     title.innerHTML = item.filename;
     record.push(item);
     video = makeVideo(item);
-    video.appendTo(playground);
+    video.appendTo(box);
     page2.style.transform = 'translate(-100%, 0)';
 };
 let refreshFileList = (cb) => {
@@ -83,6 +91,15 @@ foldBtn.addEventListener('click', step((() => {
         finish();
     }
 })()));
+replaceBtn.addEventListener('click', step((e, finish) => {
+    selectSub((err, file) => {
+        if (err) {
+            return finish();
+        }
+        video && video.replaceSubtitle(file);
+        finish();
+    })
+}));
 
 backBtn.addEventListener('click', back);
 clearBtn.addEventListener('click', step((e, finish) => {

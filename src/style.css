@@ -1,6 +1,9 @@
 * {
     box-sizing: border-box;
 }
+input[type=file] {
+    display: none;
+}
 html, body {
     margin: 0;
     border: 0 solid transparent;
@@ -54,24 +57,29 @@ html, body {
 
 #playground {
     margin: 20px auto;
+    width: 888px;
+}
+
+#box, #subtitle, #panel {
+    width: 100%;
 }
 
 video {
-    margin: 0 auto;
     border: 1px solid darkgray;
-    height: 680px;
-    width: 888px;
     display: block;
 }
 
-.subtitle {
-    margin: 0 auto;
-    padding: 10px;
+#subtitle {
     border: 1px solid darkgray;
     border-width: 0 1px 1px 1px;
-    width: 888px;
+    padding: 10px;
     font-size: 16px;
     cursor: default;
+}
+#panel {
+    border: 1px solid darkgray;
+    border-width: 0 1px 1px 1px;
+    padding: 10px;
 }
 
 .word:hover {

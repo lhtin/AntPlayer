@@ -37,7 +37,7 @@ if (process.platform === 'darwin') {
 
 app.on('ready', () => {
     const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+    // Menu.setApplicationMenu(menu);
     createWindow();
 });
 app.on('window-all-closed', function () {

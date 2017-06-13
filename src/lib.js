@@ -61,53 +61,6 @@ let videoRegExp = /\.(?:mp4|webm)$/;
 let isVideoFile = (filename) => {
     return videoRegExp.test(filename);
 };
-let makeSubtitle = (path, video, sub) => {
-    fs.readFile(path, 'utf8', (err, data) => {
-        if (err) {
-            return;
-        }
-        let res = parse(data);
-        if (res.valid) {
-            let findCue = (() => {
-                let cues = res.cues;
-                let len = cues.length;
-                let at = 0;
-                return (t) => {
-                    let cue = cues[at];
-                    if (cue.start > t) {
-                        if (at <= 0) {
-                            return '';
-                        } else if (cues[at - 1].end < t) {
-                            return '';
-                        } else {
-                            at -= 1;
-                            return findCue(t);
-                        }
-                    } else if (cue.end < t) {
-                        if (at >= len - 1) {
-                            return '';
-                        } else if (cues[at + 1].start > t) {
-                            return '';
-                        } else {
-                            at += 1;
-                            return findCue(t);
-                        }
-                    } else {
-                        return cue.text;
-                    }
-                }
-            })();
-            let lastCue;
-            video.addEventListener('timeupdate', function () {
-                let cue = findCue(video.currentTime);
-                if (lastCue !== cue) {
-                    lastCue = cue;
-                    sub.innerHTML = cue.replace(/(\b\w+\b)/g, '<span class="word">$1</span>');
-                }
-            });
-        }
-    });
-};
 let log = (err) => {
     document.body.innerHTML = err.toString();
 };
@@ -153,6 +106,22 @@ module.exports = {
                 cb(false, paths[0]);
             } else {
                 cb(new Error('没有选择目录'));
+            }
+        });
+    },
+    selectSub: (cb) => {
+        dialog.showOpenDialog({
+            title: '选择字幕文件',
+            defaultPath: '~',
+            properties: ['openFile'],
+            filters: [
+                {name: 'Subtitle', extensions: ['vtt']},
+            ]
+        }, (paths) => {
+            if (paths) {
+                cb(false, paths[0]);
+            } else {
+                cb(new Error('没有选择字幕文件'));
             }
         });
     },
@@ -228,10 +197,9 @@ module.exports = {
         let loadedmetadata = false;
         let frag = document.createDocumentFragment();
         let video = document.createElement('video');
-        let sub = document.createElement('div');
-        sub.className = 'subtitle';
+        let playground = document.getElementById('playground');
+        let subtitle = document.getElementById('subtitle')
         frag.appendChild(video);
-        frag.appendChild(sub);
         video.addEventListener('canplay', function () {
             let height = video.videoHeight;
             if (height > 500) {
@@ -241,7 +209,7 @@ module.exports = {
             video.width = height / video.videoHeight * video.videoWidth;
             video.style.height = video.height + 'px';
             video.style.width = video.width + 'px';
-            sub.style.width = video.width + 'px';
+            playground.style.width = video.width + 'px';
         });
         video.addEventListener('loadedmetadata', function () {
             loadedmetadata = true;
@@ -260,17 +228,59 @@ module.exports = {
             if (err) {
 
             } else if (stats.isFile()) {
-                makeSubtitle(subtitlePath, video, sub);
+                api.replaceSubtitle(subtitlePath);
             }
         });
 
-        return {
+        let sub;
+        let subAt = 0;
+        let findCue = (t) => {
+            if (!sub) {
+                return '';
+            }
+            let cues = sub.cues;
+            let cue = cues[subAt];
+            let len = sub.cues.length;
+            if (cue.start > t) {
+                if (subAt <= 0) {
+                    return '';
+                } else if (cues[subAt - 1].end < t) {
+                    return '';
+                } else {
+                    subAt -= 1;
+                    return findCue(t);
+                }
+            } else if (cue.end < t) {
+                if (subAt >= len - 1) {
+                    return '';
+                } else if (cues[subAt + 1].start > t) {
+                    return '';
+                } else {
+                    subAt += 1;
+                    return findCue(t);
+                }
+            } else {
+                return cue.text;
+            }
+        };
+        let lastCue;
+        video.addEventListener('timeupdate', () => {
+            let cue = findCue(video.currentTime);
+            if (lastCue !== cue) {
+                lastCue = cue;
+                subtitle.innerHTML = `Subtitle: ${cue.replace(/(\b\w+\b)/g, '<span class="word">$1</span>')}`;
+            }
+        });
+        let api = {
             appendTo: function (box) {
                 box.appendChild(frag);
             },
             destroy: function () {
                 video.pause();
                 frag.parentNode && frag.parentNode.removeChild(frag);
+            },
+            pause: () => {
+                video.pause();
             },
             toggle: function () {
                 if (video.paused) {
@@ -288,7 +298,20 @@ module.exports = {
                 if (loadedmetadata) {
                     video.currentTime += 5;
                 }
+            },
+            replaceSubtitle: (path) => {
+                fs.readFile(path, 'utf8', (err, data) => {
+                    if (err) {
+                        return;
+                    }
+                    let res = parse(data);
+                    if (res.valid) {
+                        sub = res;
+                        subAt = 0;
+                    }
+                });
             }
-        }
+        };
+        return api;
     }
 };
