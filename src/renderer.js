@@ -6,6 +6,7 @@ const {
 
 let openBtn = document.getElementById('open-btn');
 let foldBtn = document.getElementById('fold-btn');
+let refreshBtn = document.getElementById('refresh-btn');
 let backBtn = document.getElementById('back-btn');
 let clearBtn = document.getElementById('clear-btn');
 let listEle = document.getElementById('list');
@@ -138,6 +139,10 @@ openBtn.addEventListener('click', step((e, finish) => {
         store('dir', dir);
         refreshFileList(finish);
     });
+}));
+
+refreshBtn.addEventListener('click', step((e, finish) => {
+    refreshFileList(finish)
 }));
 
 refreshFileList(() => {

@@ -53,7 +53,7 @@ let record = (() => {
             store(key, r);
         },
         get: () => {
-            return Array.from(r).reverse().slice(0, 10);
+            return Array.from(r).reverse().slice(0, 1000);
         }
     }
 })();
