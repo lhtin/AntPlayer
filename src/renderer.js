@@ -1,7 +1,7 @@
 const {
     selectDir, selectSub, getFiles, makeVideo,
     step, record, makeList,
-    store, find
+    store, find, isExist
 } = require('./lib');
 
 let openBtn = document.getElementById('open-btn');
@@ -45,6 +45,9 @@ let playVideo = (item) => {
 };
 let refreshFileList = (cb) => {
     let dir = find('dir') || './';
+    if (!isExist(dir)) {
+        dir = './'
+    }
     getFiles(dir, (list) => {
         preview.innerHTML = '';
         preview.appendChild(makeList(list));

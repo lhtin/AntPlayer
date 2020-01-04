@@ -62,8 +62,17 @@ let isVideoFile = (filename) => {
     return videoRegExp.test(filename);
 };
 let log = (err) => {
-    document.body.innerHTML = err.toString();
+    console.error(err)
+    // document.body.innerHTML = `报错了，查看console获取详细信息：${err.toString()}`;
 };
+let isExist = (path) => {
+  try {
+    return fs.existsSync(path)
+  } catch (err) {
+    log(err)
+    return false
+  }
+}
 module.exports = {
     store: store,
     find: find,
@@ -84,6 +93,7 @@ module.exports = {
         }
         return frag;
     },
+    isExist: isExist,
     step: (f) => {
         let flag = false;
         return (e) => {
@@ -268,7 +278,7 @@ module.exports = {
             let cue = findCue(video.currentTime);
             if (lastCue !== cue) {
                 lastCue = cue;
-                subtitle.innerHTML = `Subtitle: ${cue.replace(/(\b\w+\b)/g, '<span class="word">$1</span>')}`;
+                subtitle.innerHTML = `${cue.replace(/(\b\w+\b)/g, '<span class="word">$1</span>')}`;
             }
         });
         let api = {

@@ -25,6 +25,9 @@ html, body {
     background-color: white;
     transition: transform .6s ease;
 }
+.page#page2 {
+    background-color: black;
+}
 
 .btn {
     display: inline-block;
@@ -58,6 +61,7 @@ html, body {
 #playground {
     margin: 20px auto;
     width: 888px;
+    box-sizing: content-box;
 }
 
 #box, #subtitle, #panel {
@@ -65,20 +69,20 @@ html, body {
 }
 
 video {
-    border: 1px solid darkgray;
     display: block;
 }
 
 #subtitle {
-    border: 1px solid darkgray;
-    border-width: 0 1px 1px 1px;
     padding: 10px;
-    font-size: 16px;
+    font-size: 18px;
     cursor: default;
+    color: white;
+    font-weight: bold;
+    font-family: sans-serif;
+    text-align: center;
 }
 #panel {
-    border: 1px solid darkgray;
-    border-width: 0 1px 1px 1px;
+    border: 1px solid lightgray;
     padding: 10px;
 }
 
